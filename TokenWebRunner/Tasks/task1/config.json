@@ -1,0 +1,11 @@
+﻿{
+  "Description": "查询券",
+  "BaseUrl": "http://localhost:50000",
+  "TokenUrl": "/token",
+  "TokenParams": "grant_type=password&client_id=xxx&client_secret=xxx&username=xxx&password=xxx",
+  "RequestUrl": "/api/coupon/q",
+  "RequestMethod": "Post",
+  "RequestContentType": "json",
+  "RequestTimeout": 0,
+  "RequestBody": "{\"SchoolID\":1,\"StaffID\":\"xxx\",\"CouponType\":2,\"CouponSubType\":2}"
+}
