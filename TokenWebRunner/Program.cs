@@ -8,7 +8,7 @@ namespace TokenWebRunner
 {
     static class Program
     {
-        static void Main(string[] args)
+        static int Main(string[] args)
         {
             string taskName = null;
             if (args.Length == 0)
@@ -22,7 +22,9 @@ namespace TokenWebRunner
             var task = new TaskProcessor(taskName);
             var result = task.Run();
 
-            Console.WriteLine(result);
+            Console.WriteLine(result.Message);
+
+            return result.IsSuccess ? 0 : 1;
         }
     }
 }

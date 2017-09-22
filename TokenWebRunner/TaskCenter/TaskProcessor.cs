@@ -57,7 +57,7 @@ namespace TokenWebRunner.TaskCenter
                 var httpClient = HttpWebClient.Instance;
                 var httpResult = httpClient.PostAsync(TaskConfig.BaseUrl, TaskConfig.TokenUrl, TaskConfig.TokenParams, HttpWebClient.ContentType.form);
                 var result = httpResult.Result;
-                if (result.Status < System.Net.HttpStatusCode.BadRequest)
+                if (result.IsSuccessStatusCode)
                 {
                     var token = JsonConvert.DeserializeObject<TokenInfoExt>(result.Content);
                     var strToken = JsonConvert.SerializeObject(token);
@@ -72,27 +72,31 @@ namespace TokenWebRunner.TaskCenter
             return null;
         }
 
-        public string Run()
+        public ResultInfo Run()
         {
+            Log.Instance.LogInfo("[" + TaskConfig.ToString() + "] Start");
             var httpClient = HttpWebClient.Instance;
             var method = new HttpMethod(TaskConfig.RequestMethod);
             var contentType = (HttpWebClient.ContentType)Enum.Parse(typeof(HttpWebClient.ContentType), TaskConfig.RequestContentType, true);
             var token = GetToken();
-            string requestContent = TaskConfig.RequestBody;            
+            string requestContent = TaskConfig.RequestBody;
             var httpResult = httpClient.SendAsync(TaskConfig.BaseUrl, TaskConfig.RequestUrl, TaskConfig.RequestBody, contentType, method, token, TaskConfig.RequestTimeout);
             var result = httpResult.Result;
             string strResult = string.Empty;
-            if (result.Status < System.Net.HttpStatusCode.BadRequest)
+            if (result.IsSuccessStatusCode)
             {
                 strResult = "[" + TaskConfig.ToString() + "] Success:" + result.Status.ToString() + ":" + result.Content;
-                Log.Instance.LogInfo(strResult);
             }
             else
             {
                 strResult = "[" + TaskConfig.ToString() + "] Failed:" + result.Status.ToString() + ":" + result.Message;
-                Log.Instance.LogError("[" + TaskConfig.ToString() + "] Failed", new Exception(result.Status.ToString() + ":" + result.Message));
             }
-            return strResult;
+            Log.Instance.LogInfo(strResult);
+            return new ResultInfo()
+            {
+                IsSuccess = result.IsSuccessStatusCode,
+                Message = strResult
+            };            
         }
     }
 }

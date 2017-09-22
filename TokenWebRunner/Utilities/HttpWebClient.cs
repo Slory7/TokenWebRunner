@@ -93,19 +93,24 @@ namespace TokenWebRunner.Utilities
                     var response = await client.SendAsync(requestMessage);
                     result.Status = response.StatusCode;
                     string strContent = await response.Content.ReadAsStringAsync();
+                    result.IsSuccessStatusCode = response.IsSuccessStatusCode;
                     result.Content = strContent;
-                    if ((int)result.Status >= 400 && !String.IsNullOrEmpty(strContent) && strContent.StartsWith("{"))
+                    result.Message = response.ReasonPhrase;
+                    if (!response.IsSuccessStatusCode)
                     {
-                        try
+                         if (!String.IsNullOrEmpty(strContent) && strContent.StartsWith("{"))
                         {
-                            using (var stream = new MemoryStream(Encoding.Default.GetBytes(result.Content)))
+                            try
                             {
-                                var serializer = new DataContractJsonSerializer(typeof(ResponseMsg));
-                                var msgObj = serializer.ReadObject(stream) as ResponseMsg;
-                                result.Message = msgObj.Message ?? msgObj.msg ?? msgObj.error;
+                                using (var stream = new MemoryStream(Encoding.Default.GetBytes(result.Content)))
+                                {
+                                    var serializer = new DataContractJsonSerializer(typeof(ResponseMsg));
+                                    var msgObj = serializer.ReadObject(stream) as ResponseMsg;
+                                    result.Message = msgObj.Message ?? msgObj.msg ?? msgObj.error;
+                                }
                             }
+                            catch { }
                         }
-                        catch { }
                     }
                 }
             }
@@ -197,6 +202,7 @@ namespace TokenWebRunner.Utilities
     public class HttpResult
     {
         public HttpStatusCode Status { get; set; }
+        public bool IsSuccessStatusCode { get; set; }
         public string Content { get; set; }
         public string Message { get; set; }
     }
