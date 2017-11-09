@@ -15,13 +15,15 @@ namespace TokenWebRunner.TaskCenter
     {
         readonly string _configFile;
         readonly string _tokenFile;
+        readonly string _taskDir;
         readonly string _taskName;
         public TaskProcessor(string taskName)
         {
             _taskName = taskName;
             string baseDir = AppDomain.CurrentDomain.BaseDirectory;
-            _configFile = Path.Combine(baseDir, "Tasks", _taskName, "config.json");
-            _tokenFile = Path.Combine(baseDir, "Tasks", _taskName, "token.json");
+            _taskDir = Path.Combine(baseDir, "Tasks", _taskName);
+            _configFile = Path.Combine(_taskDir, "config.json");
+            _tokenFile = Path.Combine(_taskDir, "token.json");
         }
 
         public string TaskName { get { return _taskName; } }
@@ -78,25 +80,67 @@ namespace TokenWebRunner.TaskCenter
             var httpClient = HttpWebClient.Instance;
             var method = new HttpMethod(TaskConfig.RequestMethod);
             var contentType = (HttpWebClient.ContentType)Enum.Parse(typeof(HttpWebClient.ContentType), TaskConfig.RequestContentType, true);
+
             var token = GetToken();
-            string requestContent = TaskConfig.RequestBody;
-            var httpResult = httpClient.SendAsync(TaskConfig.BaseUrl, TaskConfig.RequestUrl, TaskConfig.RequestBody, contentType, method, token, TaskConfig.RequestTimeout);
-            var result = httpResult.Result;
+
             string strResult = string.Empty;
-            if (result.IsSuccessStatusCode)
+            bool isSuccess = false;
+            string requestContent = TaskConfig.RequestBody;
+            if (string.IsNullOrEmpty(requestContent) && !string.IsNullOrEmpty(TaskConfig.RequestSourceFile))
             {
-                strResult = "[" + TaskConfig.ToString() + "] Success:" + result.Status.ToString() + ":" + result.Content;
+                string strCsvFile = Path.Combine(_taskDir, TaskConfig.RequestSourceFile);
+                if (contentType == HttpWebClient.ContentType.json)
+                {
+                    using (var fileStream = new StreamReader(strCsvFile))
+                    {
+                        int nSuccessCount = 0;
+                        int nRowNumber = 0;
+                        foreach (var jsonRow in CsvJsonConverter.ConvertToJson(fileStream))
+                        {
+                            nRowNumber++;
+                            var httpResult = httpClient.SendAsync(TaskConfig.BaseUrl, TaskConfig.RequestUrl, jsonRow, contentType, method, token, TaskConfig.RequestTimeout);
+                            var result = httpResult.Result;
+                            string strLog = null;
+                            if (result.IsSuccessStatusCode)
+                            {
+                                nSuccessCount++;
+                                strLog = "[" + TaskConfig.ToString() + "] Success:" + result.Status.ToString() + ", Row:" + nRowNumber + ", Result:" + result.Content;
+                            }
+                            else
+                            {
+                                strLog = "[" + TaskConfig.ToString() + "] Failed:" + result.Status.ToString() + ", Row:" + nRowNumber + ", Result:" + result.Message;
+                            }
+                            Log.Instance.LogInfo(strLog);
+                        }
+
+                        strResult = $"[{TaskConfig.ToString()}] Result:Total: {nRowNumber},Success:{nSuccessCount} ,Failed:{nRowNumber - nSuccessCount}";
+                        Log.Instance.LogInfo(strResult);
+
+                        isSuccess = nRowNumber == nSuccessCount;
+                    }
+                }
+                //TODO: other format
             }
             else
             {
-                strResult = "[" + TaskConfig.ToString() + "] Failed:" + result.Status.ToString() + ":" + result.Message;
+                var httpResult = httpClient.SendAsync(TaskConfig.BaseUrl, TaskConfig.RequestUrl, TaskConfig.RequestBody, contentType, method, token, TaskConfig.RequestTimeout);
+                var result = httpResult.Result;
+                if (result.IsSuccessStatusCode)
+                {
+                    strResult = "[" + TaskConfig.ToString() + "] Success:" + result.Status.ToString() + ", Result:" + result.Content;
+                    isSuccess = true;
+                }
+                else
+                {
+                    strResult = "[" + TaskConfig.ToString() + "] Failed:" + result.Status.ToString() + ", Result:" + result.Message;
+                }
+                Log.Instance.LogInfo(strResult);
             }
-            Log.Instance.LogInfo(strResult);
             return new ResultInfo()
             {
-                IsSuccess = result.IsSuccessStatusCode,
+                IsSuccess = isSuccess,
                 Message = strResult
-            };            
+            };
         }
     }
 }

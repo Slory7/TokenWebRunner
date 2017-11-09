@@ -6,6 +6,7 @@
   "RequestUrl": "/api/coupon/q",
   "RequestMethod": "Post",
   "RequestContentType": "json",
-  "RequestTimeout": 0,
+  "RequestTimeout": 20,
+  "RequestSourceFile": "data.csv",
   "RequestBody": "{\"SchoolID\":1,\"StaffID\":\"xxx\",\"CouponType\":2,\"CouponSubType\":2}"
 }

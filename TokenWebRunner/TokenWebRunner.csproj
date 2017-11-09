@@ -91,6 +91,7 @@
     <Compile Include="Logging\Log.cs" />
     <Compile Include="TaskCenter\ResultInfo.cs" />
     <Compile Include="TaskCenter\TokenInfoExt.cs" />
+    <Compile Include="Utilities\CsvJsonConverter.cs" />
     <Compile Include="Utilities\HttpWebClient.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -17,6 +17,7 @@ namespace TokenWebRunner
         public string RequestMethod { get; set; }
         public string RequestContentType { get; set; }
         public string RequestBody { get; set; }
+        public string RequestSourceFile { get; set; }
         public int RequestTimeout { get; set; }
         public override string ToString()
         {
