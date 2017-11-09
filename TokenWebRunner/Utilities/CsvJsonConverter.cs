@@ -1,4 +1,5 @@
 ﻿using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -7,7 +8,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace TokenWebRunner.Utilities
+namespace TokenWebRequster.Utilities
 {
     public static class CsvJsonConverter
     {
@@ -24,13 +25,29 @@ namespace TokenWebRunner.Utilities
         private static string ConvertToJson(string[] headers, string row)
         {
             var rows = row.SplitQuotedLine();
-            var newDiction = new Dictionary<string, string>(1);
+            var newDiction = new Dictionary<string, object>(1);
             for (int i = 0; i < rows.Length; i++)
             {
-                newDiction.Add(headers[i], rows[i]);
+                var obj = GetValidJson(rows[i]);
+                newDiction.Add(headers[i], obj);
             }
             var result = JsonConvert.SerializeObject(newDiction);
             return result;
+        }
+        private static object GetValidJson(string strInput)
+        {
+            var strVal = strInput.Trim();
+            if ((strVal.StartsWith("{") && strVal.EndsWith("}")) || //For object
+                (strVal.StartsWith("[") && strVal.EndsWith("]"))) //For array
+            {
+                try
+                {
+                    var obj = JToken.Parse(strVal);
+                    return obj;
+                }
+                catch { }
+            }
+            return strVal;
         }
         private static string[] SplitQuotedLine(this string value)
         {
@@ -43,7 +60,7 @@ namespace TokenWebRunner.Utilities
                 {
                     list.Add("");
                 }
-                list.Add(val.TrimStart(',').Trim('"'));
+                list.Add(val.TrimStart(',').Trim('"').Replace("\"\"", "\""));
             }
             return list.ToArray();
         }

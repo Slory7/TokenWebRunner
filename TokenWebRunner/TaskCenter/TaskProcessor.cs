@@ -6,6 +6,7 @@ using System.Linq;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using TokenWebRequster.Utilities;
 using TokenWebRunner.Logging;
 using TokenWebRunner.Utilities;
 
@@ -104,16 +105,16 @@ namespace TokenWebRunner.TaskCenter
                             if (result.IsSuccessStatusCode)
                             {
                                 nSuccessCount++;
-                                strLog = "[" + TaskConfig.ToString() + "] Success:" + result.Status.ToString() + ", Row:" + nRowNumber + ", Result:" + result.Content;
+                                strLog = $"[{TaskConfig.ToString()}] Success:{result.Status}({(int)result.Status}), Row:{nRowNumber}, Result:{ result.Content}";
                             }
                             else
                             {
-                                strLog = "[" + TaskConfig.ToString() + "] Failed:" + result.Status.ToString() + ", Row:" + nRowNumber + ", Result:" + result.Message;
+                                strLog = $"[{TaskConfig.ToString()}] Failed:{result.Status}({(int)result.Status}), Row:{nRowNumber}, Result:{ result.Message}";
                             }
                             Log.Instance.LogInfo(strLog);
                         }
 
-                        strResult = $"[{TaskConfig.ToString()}] Result:Total: {nRowNumber},Success:{nSuccessCount} ,Failed:{nRowNumber - nSuccessCount}";
+                        strResult = $"[{TaskConfig.ToString()}] Result:Total:{nRowNumber}, Success:{nSuccessCount}, Failed:{nRowNumber - nSuccessCount}";
                         Log.Instance.LogInfo(strResult);
 
                         isSuccess = nRowNumber == nSuccessCount;
@@ -127,12 +128,12 @@ namespace TokenWebRunner.TaskCenter
                 var result = httpResult.Result;
                 if (result.IsSuccessStatusCode)
                 {
-                    strResult = "[" + TaskConfig.ToString() + "] Success:" + result.Status.ToString() + ", Result:" + result.Content;
+                    strResult = $"[{TaskConfig.ToString()}] Success:{result.Status}({(int)result.Status}), Result:{ result.Content}";
                     isSuccess = true;
                 }
                 else
                 {
-                    strResult = "[" + TaskConfig.ToString() + "] Failed:" + result.Status.ToString() + ", Result:" + result.Message;
+                    strResult = $"[{TaskConfig.ToString()}] Failed:{result.Status}({(int)result.Status}), Result:{ result.Message}";
                 }
                 Log.Instance.LogInfo(strResult);
             }
