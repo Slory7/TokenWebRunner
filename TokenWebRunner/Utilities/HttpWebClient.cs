@@ -79,6 +79,7 @@ namespace TokenWebRunner.Utilities
         public async Task<HttpResult> SendAsync(string baseUri, string relativeUri, string postData, ContentType contentType, HttpMethod method, TokenInfo token = null, int timeoutSecond = 0)
         {
             HttpResult result = new HttpResult();
+            var sRelativeUri = relativeUri;
             try
             {
                 using (var client = this.GetClient(baseUri, token, timeoutSecond))
@@ -86,10 +87,17 @@ namespace TokenWebRunner.Utilities
                     HttpContent httpContent = null;
                     if (postData != null)
                     {
-                        httpContent = new StringContent(postData, Encoding.UTF8);
-                        httpContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(this.GetContentType(contentType)) { CharSet = "utf-8" };
+                        if (method == HttpMethod.Get)
+                        {
+                            sRelativeUri += postData;
+                        }
+                        else
+                        {
+                            httpContent = new StringContent(postData, Encoding.UTF8);
+                            httpContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(this.GetContentType(contentType)) { CharSet = "utf-8" };
+                        }
                     }
-                    HttpRequestMessage requestMessage = new HttpRequestMessage(method, relativeUri) { Content = httpContent };
+                    HttpRequestMessage requestMessage = new HttpRequestMessage(method, sRelativeUri) { Content = httpContent };
                     var response = await client.SendAsync(requestMessage);
                     result.Status = response.StatusCode;
                     string strContent = await response.Content.ReadAsStringAsync();
